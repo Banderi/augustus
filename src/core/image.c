@@ -9,7 +9,7 @@ color_t image::to_32_bit(uint16_t c) {
            ((c & 0x1f) << 3) | ((c & 0x1c) >> 2);
 }
 
-size_t image::convert_uncompressed(buffer *buf, size_t amount, color_t *dst) {
+int32_t image::convert_uncompressed(buffer *buf, int32_t amount, color_t *dst) {
     for (int i = 0; i < amount; i += 2) {
         color_t c = to_32_bit(buf->read_u16());
         *dst = c;
@@ -18,7 +18,7 @@ size_t image::convert_uncompressed(buffer *buf, size_t amount, color_t *dst) {
     return amount / 2;
 }
 
-size_t image::convert_compressed(buffer *buf, size_t amount, color_t *dst) {
+int32_t image::convert_compressed(buffer *buf, int32_t amount, color_t *dst) {
     int dst_length = 0;
     while (amount > 0) {
         int control = buf->read_u8();

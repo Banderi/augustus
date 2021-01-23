@@ -932,7 +932,7 @@ void image_draw_isometric_top(int image_id, int x, int y, color_t color_mask) {
 
         return;
     }
-    if (!img->is_fully_compressed())
+    if (!img->has_compressed_part())
         return;
     const color_t *data = &image_data(image_id)[img->get_uncompressed_length()];
 

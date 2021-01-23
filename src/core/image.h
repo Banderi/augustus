@@ -53,8 +53,8 @@ public:
     image() = default;
     ~image() = default;
 
-    static size_t convert_uncompressed(buffer *buf, size_t amount, color_t *dst);
-    static size_t convert_compressed(buffer *buf, size_t amount, color_t *dst);
+    static int32_t convert_uncompressed(buffer *buf, int32_t amount, color_t *dst);
+    static int32_t convert_compressed(buffer *buf, int32_t amount, color_t *dst);
 
     // dummy image
     static image& dummy() {

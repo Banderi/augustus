@@ -5,32 +5,32 @@
 #include "core/image_collection.h"
 
 static const size_t NAME_SIZE = 32;
+static const char* DATA_FOLDER_C3 = "555/";
+static const char* DATA_FOLDER_PH = "Data/";
+static const char* EXTENSION_555 = "555";
 
 class game_images {
 private:
-    static const size_t TMP_DATA_SIZE = 16000000;
-
     bool editor;
     bool fonts_enabled;
     int current_climate;
     int font_base_offset;
     int terrain_ph_offset;
 
-    image_collection *ph_expansion;
-    image_collection *ph_sprmain;
-    image_collection *ph_unloaded;
-    image_collection *main;
-    image_collection *ph_terrain;
+    // Main
+    image_collection main;
+    image_collection enemy;
+    image_collection empire;
+    image_collection font;
 
-    image_collection *ph_sprmain2;
-    image_collection *ph_sprambient;
-    image_collection *ph_mastaba;
-
-    image_collection *enemy;
-    image_collection *empire;
-    image_collection *font;
-
-    color_t *tmp_image_data;
+    // Additional
+    image_collection ph_expansion;
+    image_collection ph_sprmain;
+    image_collection ph_unloaded;
+    image_collection ph_terrain;
+    image_collection ph_sprmain2;
+    image_collection ph_sprambient;
+    image_collection ph_mastaba;
 
 public:
     game_images();
@@ -38,7 +38,7 @@ public:
     game_images(game_images&&) = delete;                  // Move construct
     game_images& operator=(game_images const&) = delete;  // Copy assign
     game_images& operator=(game_images &&) = delete;      // Move assign
-    ~game_images();
+    ~game_images() = default;
 
     // singleton
     static game_images& get() {
@@ -53,14 +53,14 @@ public:
 
     // getting images
     int get_image_id(int group);
-    const image *get_image(int id, int mode = 0);
+    image *get_image(int id, int mode = 0);
     const image *image_letter(int letter_id);
     const image *image_get_enemy(int id);
     const color_t *image_data(int id);
     const color_t *image_data_letter(int letter_id);
     const color_t *image_data_enemy(int id);
     int image_groupid_translation(int *table, int group);
-    const color_t *load_external_data(const image *img);
+    const color_t *load_external_data(image *img);
 
     // getters & setters
     int get_current_climate() const;
@@ -77,7 +77,7 @@ public:
 
 // TODO: temporary functions to be removed
 int image_id_from_group(int group);
-const image *image_get(int id, int mode = 0);
+image *image_get(int id, int mode = 0);
 const image *image_letter(int letter_id);
 const image *image_get_enemy(int id);
 const color_t *image_data(int id);

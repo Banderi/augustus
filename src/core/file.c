@@ -3,9 +3,6 @@
 #include "core/string.h"
 #include "platform/file_manager.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 FILE *file_open(const char *filename, const char *mode) {
     return platform_file_manager_open_file(filename, mode);
 }
@@ -29,17 +26,10 @@ int file_has_extension(const char *filename, const char *extension) {
     return string_compare_case_insensitive(filename, extension) == 0;
 }
 
-void file_change_extension(char *filename, const char *new_extension) {
-    char c;
-    do {
-        c = *filename;
-        filename++;
-    } while (c != '.' && c);
-    if (c == '.') {
-        filename[0] = new_extension[0];
-        filename[1] = new_extension[1];
-        filename[2] = new_extension[2];
-        filename[3] = 0;
+void file_change_extension(std::string &filename, std::string new_extension) {
+    size_t dot = filename.rfind('.');
+    if (dot != std::string::npos) {
+        filename.replace(dot + 1, filename.size(), new_extension);
     }
 }
 

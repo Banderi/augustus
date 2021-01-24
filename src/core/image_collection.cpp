@@ -154,6 +154,7 @@ int image_collection::load_555(const char *filename_555) {
     dst++; // make sure img->offset > 0
     for (size_t i = 0; i < entries_num; i++) {
         image *img = &images.at(i);
+        // if external, image will automatically loaded in the runtime
         if (img->is_external()) {
             continue;
         }
@@ -210,7 +211,7 @@ int image_collection::get_id(int group) {
     return group_image_ids.at(group) + get_shift();
 }
 
-const image *image_collection::get_image(int id, bool relative) {
+image *image_collection::get_image(int id, bool relative) {
     if (!relative) {
         id -= get_shift();
     }

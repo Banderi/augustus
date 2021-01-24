@@ -187,92 +187,53 @@ struct graphics_files_collection {
         "data/SprAmbient.sg3",
 };
 
-game_images::game_images() {
-    current_climate = -1;
-    editor = false;
-    fonts_enabled = false;
-    font_base_offset = 0;
-    terrain_ph_offset = 0;
-
-    ph_expansion = new image_collection;
-    ph_sprmain = new image_collection;
-    ph_unloaded = new image_collection;
-    main = new image_collection;
-    ph_terrain = new image_collection;
-
-    ph_sprmain2 = new image_collection;
-    ph_sprambient = new image_collection;
-    ph_mastaba = new image_collection;
-
-    enemy = new image_collection;
-    empire = new image_collection;
-    font = new image_collection;
-
-    tmp_image_data = new color_t[TMP_DATA_SIZE];
+game_images::game_images():
+    current_climate(-1), editor(false), fonts_enabled(false),
+    font_base_offset(0), terrain_ph_offset(0) {
 }
 
-game_images::~game_images() {
-    delete ph_expansion;
-    delete ph_sprmain;
-    delete ph_unloaded;
-    delete main;
-    delete ph_terrain;
+const color_t *game_images::load_external_data(image *img) {
+    std::string filename = img->get_name();
+    file_change_extension(filename, EXTENSION_555);
 
-    delete ph_sprmain2;
-    delete ph_sprambient;
-    delete ph_mastaba;
+    log_info("Load external image from", filename.c_str(), img->get_data_length());
 
-    delete enemy;
-    delete empire;
-    delete font;
-
-    delete[] tmp_image_data;
-}
-
-const color_t *game_images::load_external_data(const image *img) {
-    char filename[FILE_NAME_MAX] = {};
-    int size = 0;
+    // Check root folder first
     buffer buf(img->get_data_length());
+    size_t size = io_read_file_part_into_buffer(filename.c_str(), MAY_BE_LOCALIZED, &buf,
+                                                img->get_data_length(), img->get_offset() - 1);
 
-    switch (GAME_ENV) {
-        case ENGINE_ENV_C3:
-            strcpy(&filename[0], "555/");
-            strcpy(&filename[4], img->get_name());
-            file_change_extension(filename, "555");
-            size = io_read_file_part_into_buffer(
-                    &filename[4], MAY_BE_LOCALIZED, &buf,
-                    img->get_data_length(), img->get_offset() - 1
-            );
-            break;
-        case ENGINE_ENV_PHARAOH:
-            strcpy(&filename[0], "Data/");
-            strcpy(&filename[5], img->get_name());
-            file_change_extension(filename, "555");
-            size = io_read_file_part_into_buffer(
-                    &filename[5], MAY_BE_LOCALIZED, &buf,
-                    img->get_data_length(), img->get_offset() - 1
-            );
-            break;
-    }
+    // Try in 555/data dir
     if (!size) {
-        // try in 555 dir
-        size = io_read_file_part_into_buffer(
-                filename, MAY_BE_LOCALIZED, &buf,
-                img->get_data_length(), img->get_offset() - 1
-        );
+        std:: string data_filename;
+        if (GAME_ENV == ENGINE_ENV_C3) {
+            data_filename = DATA_FOLDER_C3 + filename;
+        } else if (GAME_ENV == ENGINE_ENV_PHARAOH) {
+            data_filename = DATA_FOLDER_PH + filename;
+        }
+
+        size = io_read_file_part_into_buffer(data_filename.c_str(),MAY_BE_LOCALIZED, &buf,
+                                             img->get_data_length(), img->get_offset() - 1);
+
         if (!size) {
-            log_error("unable to load external image", img->get_name(), 0);
+            log_error("Unable to load external image from data folder", data_filename.c_str(), img->get_data_length());
             return nullptr;
         }
     }
 
     // NB: isometric images are never external
+    auto* external_image_data = new color_t[img->get_data_length()];
     if (img->is_fully_compressed())
-        image::convert_compressed(&buf, img->get_data_length(), tmp_image_data);
+        image::convert_compressed(&buf, img->get_data_length(), external_image_data);
     else {
-        image::convert_uncompressed(&buf, img->get_data_length(), tmp_image_data);
+        image::convert_uncompressed(&buf, img->get_data_length(), external_image_data);
     }
-    return tmp_image_data;
+
+    img->set_data(external_image_data, img->get_data_length());
+    img->set_external(0);
+    delete[] external_image_data;
+
+    return img->get_data();
 }
 
 int game_images::image_groupid_translation(int table[], int group) {
@@ -292,7 +253,7 @@ int game_images::image_groupid_translation(int table[], int group) {
 int game_images::get_image_id(int group) {
     switch (GAME_ENV) {
         case ENGINE_ENV_C3:
-            return main->get_id(group);
+            return main.get_id(group);
         case ENGINE_ENV_PHARAOH:
             group = image_groupid_translation(groupid_translation_table_ph, group);
 //            if (group == GROUP_SYSTEM_GRAPHICS)
@@ -300,17 +261,17 @@ int game_images::get_image_id(int group) {
 //            if (group == 1)
 //                return 615 + data.ph_terrain->id_shift_overall;
             if (group < 67) {
-                return ph_terrain->get_id(group);
+                return ph_terrain.get_id(group);
             } else if (group < 295) {
-                return main->get_id(group - 66);// + 2000;
+                return main.get_id(group - 66);// + 2000;
             } else if (group < 333) {
-                return ph_unloaded->get_id(group - 294);// + 5000;
+                return ph_unloaded.get_id(group - 294);// + 5000;
             } else if (group < 341) {
-                return font->get_id(group - 332);// + 6000;
+                return font.get_id(group - 332);// + 6000;
             } else if (group < 555) {
-                return ph_sprmain->get_id(group - 341);// + 8000;
+                return ph_sprmain.get_id(group - 341);// + 8000;
             } else {
-                return ph_sprambient->get_id(group - 555);// + ????;
+                return ph_sprambient.get_id(group - 555);// + ????;
             }
     }
     return -1;
@@ -320,48 +281,61 @@ int image_id_from_group(int group) {
     return game_images::get().get_image_id(group);
 }
 
-const image *game_images::get_image(int id, int mode) {
+image *game_images::get_image(int id, int mode) {
+    image* img = &image::dummy();
     switch (GAME_ENV) {
         case ENGINE_ENV_C3:
-            if (id >= main->size() && id < main->size() + MAX_MODDED_IMAGES) {
-                return &image::dummy();
-            } else if (id >= 0) {
-                return main->get_image(id);
-            } else {
-                return &image::dummy();
-            }
+            img = main.get_image(id);
+            break;
         case ENGINE_ENV_PHARAOH: // todo: mods
-            const image *img;
-            img = ph_expansion->get_image(id);
-            if (!img->is_dummy()) return img;
-            img = ph_sprmain->get_image(id);
-            if (!img->is_dummy()) return img;
-            img = ph_unloaded->get_image(id);
-            if (!img->is_dummy()) return img;
-            img = main->get_image(id);
-            if (!img->is_dummy()) return img;
-            img = ph_terrain->get_image(id);
-            if (!img->is_dummy()) return img;
-            img = font->get_image(id);
-            if (!img->is_dummy()) return img;
-            img = ph_sprambient->get_image(id);
-            if (!img->is_dummy()) return img;
+            img = ph_expansion.get_image(id);
+            if (!img->is_dummy()) {
+                return img;
+            }
 
-            // default
-            return ph_terrain->get_image(615, true);
+            img = ph_sprmain.get_image(id);
+            if (!img->is_dummy()) {
+                return img;
+            }
+
+            img = ph_unloaded.get_image(id);
+            if (!img->is_dummy()){
+                return img;
+            }
+
+            img = main.get_image(id);
+            if (!img->is_dummy()) {
+                return img;
+            }
+
+            img = ph_terrain.get_image(id);
+            if (!img->is_dummy()) {
+                return img;
+            }
+
+            img = font.get_image(id);
+            if (!img->is_dummy()) {
+                return img;
+            }
+
+            img = ph_sprambient.get_image(id);
+            if (!img->is_dummy()) {
+                return img;
+            }
+            break;
     }
-    return &image::dummy();
+    return img;
 }
 
-const image *image_get(int id, int mode) {
+image *image_get(int id, int mode) {
     return game_images::get().get_image(id, mode);
 }
 
 const image *game_images::image_letter(int letter_id) {
     if (fonts_enabled == FULL_CHARSET_IN_FONT) {
-        return font->get_image(font_base_offset + letter_id);
+        return font.get_image(font_base_offset + letter_id);
     } else if (fonts_enabled == MULTIBYTE_IN_FONT && letter_id >= IMAGE_FONT_MULTIBYTE_OFFSET) {
-        return font->get_image(font_base_offset + letter_id - IMAGE_FONT_MULTIBYTE_OFFSET);
+        return font.get_image(font_base_offset + letter_id - IMAGE_FONT_MULTIBYTE_OFFSET);
     } else if (letter_id < IMAGE_FONT_MULTIBYTE_OFFSET) {
         return get_image(get_image_id(GROUP_FONT) + letter_id);
     }
@@ -374,7 +348,7 @@ const image *image_letter(int letter_id) {
 }
 
 const image *game_images::image_get_enemy(int id) {
-    return enemy->get_image(id);
+    return enemy.get_image(id);
 }
 
 const image *image_get_enemy(int id) {
@@ -383,7 +357,7 @@ const image *image_get_enemy(int id) {
 
 const color_t *game_images::image_data(int id) {
     const image *lookup = get_image(id);
-    const image *img = get_image(id + lookup->get_offset_mirror());
+    image *img = get_image(id + lookup->get_offset_mirror());
     if (img->is_external()) {
         return load_external_data(img);
     } else {
@@ -428,40 +402,40 @@ int game_images::load_main(int climate_id, int is_editor, int force_reload) {
         case ENGINE_ENV_C3:
             filename_555 = is_editor ? gfc.C3_EDITOR_555[climate_id] : gfc.C3_MAIN_555[climate_id];
             filename_sgx = is_editor ? gfc.C3_EDITOR_SG2[climate_id] : gfc.C3_MAIN_SG2[climate_id];
-            if (!main->load_files(filename_555, filename_sgx)) {
+            if (!main.load_files(filename_555, filename_sgx)) {
                 return 0;
             }
-            current_climate = climate_id;
             break;
         case ENGINE_ENV_PHARAOH:
             filename_555 = is_editor ? gfc.PH_EDITOR_GRAPHICS_555 : gfc.PH_MAIN_555;
             filename_sgx = is_editor ? gfc.PH_EDITOR_GRAPHICS_SG3 : gfc.PH_MAIN_SG3;
-            if (!ph_expansion->load_files(gfc.PH_EXPANSION_555, gfc.PH_EXPANSION_SG3, -200)) {
+            if (!ph_expansion.load_files(gfc.PH_EXPANSION_555, gfc.PH_EXPANSION_SG3, -200)) {
                 return 0;
             }
-            if (!ph_sprmain->load_files(gfc.PH_SPRMAIN_555, gfc.PH_SPRMAIN_SG3, 700)) {
+            if (!ph_sprmain.load_files(gfc.PH_SPRMAIN_555, gfc.PH_SPRMAIN_SG3, 700)) {
                 return 0;
             }
-            if (!ph_unloaded->load_files(gfc.PH_UNLOADED_555, gfc.PH_UNLOADED_SG3, 11025)) {
+            if (!ph_unloaded.load_files(gfc.PH_UNLOADED_555, gfc.PH_UNLOADED_SG3, 11025)) {
                 return 0;
             }
-            if (!main->load_files(filename_555, filename_sgx, 11706)) {
+            if (!main.load_files(filename_555, filename_sgx, 11706)) {
                 return 0;
             }
             // ???? 539-long gap?
-            if (!ph_terrain->load_files(gfc.PH_TERRAIN_555, gfc.PH_TERRAIN_SG3, 14252)) {
+            if (!ph_terrain.load_files(gfc.PH_TERRAIN_555, gfc.PH_TERRAIN_SG3, 14252)) {
                 return 0;
             }
             // ???? 64-long gap?
-            if (!ph_sprambient->load_files(gfc.PH_SPRAMBIENT_555, gfc.PH_SPRAMBIENT_SG3, 15766+64)) {
+            if (!ph_sprambient.load_files(gfc.PH_SPRAMBIENT_555, gfc.PH_SPRAMBIENT_SG3, 15766+64)) {
                 return 0;
             }
-            if (!font->load_files(gfc.PH_FONTS_555, gfc.PH_FONTS_SG3, 18764)) {
+            if (!font.load_files(gfc.PH_FONTS_555, gfc.PH_FONTS_SG3, 18764)) {
                 return 0;
             }
             break;
     }
 
+    current_climate = climate_id;
     is_editor = is_editor;
     return 1;
 }
@@ -480,7 +454,7 @@ int game_images::load_enemy(int enemy_id) {
             break;
     }
 
-    if (!enemy->load_files(filename_555, filename_sgx)) {
+    if (!enemy.load_files(filename_555, filename_sgx)) {
         return 0;
     }
 

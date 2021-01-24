@@ -44,7 +44,7 @@ public:
 
     int size() const;
     int get_id(int group);
-    const image *get_image(int id, bool relative = false);
+    image *get_image(int id, bool relative = false);
 };
 
 #endif //IMAGE_COLLECTION_H

@@ -38,7 +38,7 @@ int image_collection::load_sgx(const char *filename_sgx, int shift) {
     max_image_records = buffer_sgx.read_i32();
     num_image_records = buffer_sgx.read_i32();
     num_bitmap_records = buffer_sgx.read_i32();
-    num_bitmap_records_without_system = buffer_sgx.read_i32(); /* ? */
+    unknown2 = buffer_sgx.read_i32();
     total_filesize = buffer_sgx.read_u32();
     filesize_555 = buffer_sgx.read_u32();
     filesize_external = buffer_sgx.read_u32();
@@ -47,7 +47,7 @@ int image_collection::load_sgx(const char *filename_sgx, int shift) {
     images.reserve(num_image_records);
 
     set_shift(shift);
-    set_name(filename_sgx);
+    set_sgx_filename(filename_sgx);
 
     buffer_sgx.skip(40); // skip remaining 40 bytes
 
@@ -58,14 +58,21 @@ int image_collection::load_sgx(const char *filename_sgx, int shift) {
         group_image_ids.push_back(image_id);
         if (image_id != 0) {
             num_groups_records++;
-            SDL_Log("%s group %i -> id %i", filename_sgx, i, group_image_ids[i]);
+//            SDL_Log("%s group %i -> id %i", filename_sgx, i, group_image_ids[i]);
         }
     }
 
     // parse bitmap names
-    char bmp_names[num_bitmap_records][BMP_NAME_SIZE + BMP_COMMENT_SIZE];
     // every line is 200 chars - 97 entries in the original c3.sg2 header (100 for good measure) and 18 in Pharaoh_General.sg3
-    buffer_sgx.read_raw(bmp_names, (BMP_NAME_SIZE + BMP_COMMENT_SIZE) * num_bitmap_records);
+    for (size_t i = 0; i < num_bitmap_records; i++) {
+        char folder_name[BMP_NAME_SIZE] = {};
+        char folder_comment[BMP_COMMENT_SIZE] = {};
+        buffer_sgx.read_raw(folder_name, BMP_NAME_SIZE);
+        buffer_sgx.read_raw(folder_comment, BMP_COMMENT_SIZE);
+        bitmap_image_names.emplace_back(folder_name);
+        bitmap_image_comments.emplace_back(folder_comment);
+//        SDL_Log("%s folder %i: '%s' -> '%s'", filename_sgx, i, folder_name, folder_comment);
+    }
 
     // move on to the rest of the content
     buffer_sgx.set_offset(header_size);
@@ -96,15 +103,14 @@ int image_collection::load_sgx(const char *filename_sgx, int shift) {
         img.set_compressed_part(buffer_sgx.read_i8());
         buffer_sgx.skip(2);
         uint8_t bitmap_id = buffer_sgx.read_u8();
-        const char *bmn = bmp_names[bitmap_id];
-        img.set_name(bmn, BMP_NAME_SIZE);
-        img.set_comment(bmn + BMP_NAME_SIZE, BMP_COMMENT_SIZE);
+        img.set_bitmap_index(bitmap_id);
+        img.set_bitmap_name(bitmap_image_names.at(bitmap_id).c_str());
         // new bitmap name, reset bitmap grouping index
         if (bitmap_id != bmp_lastbmp) {
             bmp_lastindex = 1;
             bmp_lastbmp = bitmap_id;
         }
-        img.set_bmp_index(bmp_lastindex);
+        img.set_index(bmp_lastindex);
         bmp_lastindex++;
         buffer_sgx.skip(1);
         img.set_animation_speed_id(buffer_sgx.read_u8());
@@ -132,22 +138,17 @@ int image_collection::load_sgx(const char *filename_sgx, int shift) {
         }
     }
 
-//    for (size_t i = 0; i < group_image_ids.size() - 1; ++i) {
-//        uint16_t current = group_image_ids.at(i);
-//        uint16_t next = group_image_ids.at(i + 1);
-//        for (size_t j = current; j <= next; ++j){
-//            images.at(j).set_group_id(current);
-//        }
-//    }
-
     // go to the end to get group names for sg3
     // always 299 x 48 bytes = 14352
+    // add one empty to sync with GROUP_IMAGE_IDS
+    group_image_tags.emplace_back("");
     if (get_sgx_version() >= 0xd5) {
         buffer_sgx.set_offset(buffer_sgx.size() - IMAGE_TAGS_OFFSET);
-        for (size_t i = 0; i < GROUP_IMAGE_IDS_SIZE - 1; i++) {
+        for (size_t i = 0; i < GROUP_IMAGE_IDS_SIZE; i++) {
             char group_tag[GROUP_IMAGE_TAG_SIZE] = {};
             buffer_sgx.read_raw(group_tag, GROUP_IMAGE_TAG_SIZE);
             group_image_tags.emplace_back(group_tag);
+//            SDL_Log("%s tag %i: '%s'", filename_sgx, i, group_tag);
         }
     }
 
@@ -254,21 +255,41 @@ void image_collection::set_shift(int32_t shift) {
     id_shift_overall = shift;
 }
 
-const char *image_collection::get_name() const {
-    return name.c_str();
+const char *image_collection::get_sgx_filename() const {
+    return sgx_filename.c_str();
 }
 
-void image_collection::set_name(const char *filename) {
-    name = std::string(filename);
+void image_collection::set_sgx_filename(const char *filename) {
+    sgx_filename = std::string(filename);
 }
 
 uint32_t image_collection::get_sgx_version() const {
     return sgx_version;
 }
 
+image *image_collection::get_image_by_group(int group_id) {
+    return get_image(get_id(group_id));
+}
+
 void image_collection::print() {
-    SDL_Log("Collection '%s', size %d", get_name(), size());
-    for (auto &img: images) {
-        img.print();
+    SDL_Log("Collection filename: '%s', size %d", get_sgx_filename(), size());
+    // skip 'system.bmp' folder
+    for (size_t i = 1; i < bitmap_image_names.size(); i++) {
+        SDL_Log("Folder name: '%s', comment: '%s'",
+                bitmap_image_names.at(i).c_str(), bitmap_image_comments.at(i).c_str());
+
+        // check all images for corresponding index
+        for (size_t j = 0; j < group_image_ids.size(); j++) {
+            auto image_id = group_image_ids.at(j);
+            if (i == images.at(image_id).get_bitmap_index()) {
+                SDL_Log("Group: tag: '%s', id: %zu", group_image_tags.at(j).c_str(), j);
+
+                // print all images related to this group
+                auto num_images = images.at(image_id).get_num_animation_sprites();
+                for (size_t z = image_id; z <= image_id + num_images; z++) {
+                    images.at(z).print();
+                }
+            }
+        }
     }
 }

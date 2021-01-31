@@ -39,7 +39,8 @@ private:
     int8_t fully_compressed = 0;
     int8_t external = 0;
     int8_t compressed_part = 0;
-    uint8_t bmp_index = 0;
+    uint8_t index = 0;
+    uint8_t bitmap_index = 0;
     int32_t offset = 0;
     int32_t data_length = 0;
     int32_t uncompressed_length = 0;
@@ -47,11 +48,7 @@ private:
     uint32_t alpha_offset = 0;
     uint32_t alpha_length = 0;
 
-    uint16_t group_id = 0;
-    std::string bitmap_name; // group_name
-    std::string group_tag;
-    std::string group_comment;
-
+    std::string bitmap_name;
     std::vector<color_t> data;
 
     static color_t to_32_bit(uint16_t c);
@@ -73,9 +70,9 @@ public:
     // getters & setters
     void set_data(color_t *image_data, size_t size);
     const color_t *get_data() const;
-    const char *get_name() const;
-    void set_name(const char *filename);
-    void set_name(const char *filename, size_t size);
+    const char *get_bitmap_name() const;
+    void set_bitmap_name(const char *filename);
+    void set_bitmap_name(const char *filename, size_t size);
     uint16_t get_width() const;
     void set_width(uint16_t width);
     uint16_t get_height() const;
@@ -94,8 +91,10 @@ public:
     void set_uncompressed_length(int new_uncompressed_length);
     int32_t get_full_length() const;
     void set_full_length(int32_t new_full_length);
-    uint8_t get_bmp_index() const;
-    void set_bmp_index(uint8_t new_bmp_index);
+    uint8_t get_index() const;
+    void set_index(uint8_t new_bmp_index);
+    uint8_t get_bitmap_index() const;
+    void set_bitmap_index(uint8_t new_bmp_index);
     int is_external() const;
     void set_external(int new_external);
     uint16_t get_num_animation_sprites() const;
@@ -110,14 +109,10 @@ public:
     void set_animation_speed_id(uint8_t new_animation_speed_id);
     int get_offset_mirror() const;
     void set_offset_mirror(int new_offset_mirror);
-    uint16_t get_group_id() const;
-    void set_group_id(uint16_t new_group_id);
     uint32_t get_alpha_offset() const;
     void set_alpha_offset(uint32_t new_alpha_offset);
     uint32_t get_alpha_length() const;
     void set_alpha_length(uint32_t new_alpha_length);
-    const char *get_comment() const;
-    void set_comment(const char *comment, size_t size);
 
     void print() const;
 };

@@ -51,15 +51,15 @@ const color_t *image::image::get_data() const {
     return data.data();
 }
 
-const char *image::get_name() const {
+const char *image::get_bitmap_name() const {
     return bitmap_name.c_str();
 }
 
-void image::set_name(const char *filename) {
+void image::set_bitmap_name(const char *filename) {
     bitmap_name = std::string(filename);
 }
 
-void image::set_name(const char *filename, size_t size) {
+void image::set_bitmap_name(const char *filename, size_t size) {
     bitmap_name = std::string(filename, size);
 }
 
@@ -143,12 +143,12 @@ void image::set_full_length(int32_t new_full_length) {
     full_length = new_full_length;
 }
 
-uint8_t image::get_bmp_index() const {
-    return bmp_index;
+uint8_t image::get_index() const {
+    return index;
 }
 
-void image::set_bmp_index(uint8_t new_bmp_index) {
-    bmp_index = new_bmp_index;
+void image::set_index(uint8_t new_bmp_index) {
+    index = new_bmp_index;
 }
 
 uint16_t image::get_num_animation_sprites() const {
@@ -203,14 +203,6 @@ bool image::is_dummy() const {
     return (this == &dummy());
 }
 
-uint16_t image::get_group_id() const {
-    return group_id;
-}
-
-void image::set_group_id(uint16_t new_group_id) {
-    group_id = new_group_id;
-}
-
 uint32_t image::get_alpha_offset() const {
     return alpha_offset;
 }
@@ -227,15 +219,15 @@ void image::set_alpha_length(uint32_t new_alpha_length) {
     alpha_length = new_alpha_length;
 }
 
-const char *image::get_comment() const {
-    return group_comment.c_str();
+uint8_t image::get_bitmap_index() const {
+    return bitmap_index;
 }
 
-void image::set_comment(const char *comment, size_t size) {
-    group_comment = std::string(comment, size);
+void image::set_bitmap_index(uint8_t new_bmp_index) {
+    bitmap_index = new_bmp_index;
 }
 
 void image::print() const {
-    SDL_Log("gr_id: %d, bmp_id: %d, name: '%s', type: %u, ext: %d, fcompr: %d, width: %u, height: %u",
-            get_group_id(), get_bmp_index(), get_name(), get_type(), is_external(), is_fully_compressed(), get_width(), get_height());
+    SDL_Log("Image id: %d, type: %u, ext: %d, fcompr: %d, width: %u, height: %u",
+            get_index(), get_type(), is_external(), is_fully_compressed(), get_width(), get_height());
 }

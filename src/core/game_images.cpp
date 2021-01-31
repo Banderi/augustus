@@ -193,7 +193,7 @@ game_images::game_images():
 }
 
 const color_t *game_images::load_external_data(image *img) {
-    std::string filename = img->get_name();
+    std::string filename = img->get_bitmap_name();
     file_change_extension(filename, EXTENSION_555);
 
     log_info("Load external image from", filename.c_str(), img->get_data_length());
@@ -359,7 +359,7 @@ const color_t *game_images::image_data(int id) {
     const image *lookup = get_image(id);
     image *img = get_image(id + lookup->get_offset_mirror());
     if (img->is_external()) {
-        return load_external_data(img);
+        return load_external_data(img); // TODO: move to image collection class ?
     } else {
         return img->get_data(); // todo: mods
     }

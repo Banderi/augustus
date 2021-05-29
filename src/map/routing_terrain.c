@@ -3,7 +3,7 @@
 #include "building/building.h"
 #include "city/view.h"
 #include "core/direction.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "map/building.h"
 #include "map/data.h"
 #include "map/image.h"

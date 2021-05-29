@@ -6,7 +6,7 @@
 #include "building/warehouse.h"
 #include "building/storage.h"
 #include "city/finance.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "game/resource.h"
 #include "graphics/window.h"
 #include "map/aqueduct.h"

@@ -8,7 +8,7 @@
 #include "city/data.h"
 #include "core/file.h"
 #include "core/log.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/game_environment.h"
 #include "city/message.h"
 #include "city/view.h"
@@ -710,7 +710,7 @@ static void savegame_load_from_state(savegame_state *state) {
                                  state->player_name,
                                  state->scenario_name);
 
-    map_image_load_state(state->image_grid, terrain_ph_offset);
+    map_image_load_state(state->image_grid, game_images::get().get_terrain_ph_offset());
     map_building_load_state(state->building_grid, state->building_damage_grid);
     map_terrain_load_state(state->terrain_grid);
     map_aqueduct_load_state(state->aqueduct_grid, state->aqueduct_backup_grid);
@@ -1014,11 +1014,11 @@ int game_file_io_read_saved_game(const char *filename, int offset) {
     if (file_has_extension(filename, "pak")) {
         log_info("Loading saved game.", filename, 0);
         init_savegame_data(0);
-        terrain_ph_offset = 539; //14791
+        game_images::get().set_terrain_ph_offset(539); //14791
     } else {
         log_info("Loading saved game (expanded).", filename, 0);
         init_savegame_data(1);
-        terrain_ph_offset = 0; //14252
+        game_images::get().set_terrain_ph_offset(0); //14252
     }
 
     log_info("Loading saved game", filename, 0);

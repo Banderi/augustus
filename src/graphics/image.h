@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_IMAGE_H
 #define GRAPHICS_IMAGE_H
 
-#include "core/image.h"
+#include "core/game_images.h"
 #include "graphics/color.h"
 #include "graphics/font.h"
 

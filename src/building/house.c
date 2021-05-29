@@ -2,7 +2,7 @@
 #include "house.h"
 
 #include "core/config.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/game_environment.h"
 #include "game/resource.h"
 #include "map/building.h"

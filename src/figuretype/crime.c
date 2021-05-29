@@ -8,7 +8,7 @@
 #include "city/population.h"
 #include "city/ratings.h"
 #include "city/sentiment.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/random.h"
 #include "figure/combat.h"
 #include "figure/formation_enemy.h"

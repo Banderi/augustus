@@ -360,7 +360,7 @@ static void draw_overlay_column(int x, int y, int height, int is_red) {
     if (height > 10)
         height = 10;
 
-    int capital_height = image_get(image_id)->height;
+    int capital_height = image_get(image_id)->get_height();
     // base
     image_draw(image_id + 2, x + 9, y - 8);
     if (height) {
@@ -385,8 +385,8 @@ static void draw_building_top(int grid_offset, building *b, int x, int y) {
     }
     if (b->type == BUILDING_GRANARY) {
         const image *img = image_get(map_image_at(grid_offset));
-        image_draw(image_id_from_group(GROUP_BUILDING_GRANARY) + 1, x + img->sprite_offset_x,
-                   y + img->sprite_offset_y - 30 - (img->height - 90));
+        image_draw(image_id_from_group(GROUP_BUILDING_GRANARY) + 1, x + img->get_sprite_offset_x(),
+                   y + img->get_sprite_offset_y() - 30 - (img->get_height() - 90));
         if (b->data.granary.resource_stored[RESOURCE_NONE] < 2400) {
             image_draw(image_id_from_group(GROUP_BUILDING_GRANARY) + 2, x + 33, y - 60);
             if (b->data.granary.resource_stored[RESOURCE_NONE] < 1800)
@@ -469,14 +469,14 @@ static void draw_animation(int x, int y, int grid_offset) {
 
     int image_id = map_image_at(grid_offset);
     const image *img = image_get(image_id);
-    if (img->num_animation_sprites && draw) {
+    if (img->get_num_animation_sprites() && draw) {
         if (map_property_is_draw_tile(grid_offset)) {
             building *b = building_get(map_building_at(grid_offset));
             int color_mask = draw_building_as_deleted(b) ? COLOR_MASK_RED : 0;
             if (b->type == BUILDING_GRANARY) {
                 image_draw(image_id_from_group(GROUP_BUILDING_GRANARY) + 1,
-                           x + img->sprite_offset_x,
-                           y + 60 + img->sprite_offset_y - img->height,
+                           x + img->get_sprite_offset_x(),
+                           y + 60 + img->get_sprite_offset_y() - img->get_height(),
                            color_mask);
                 if (b->data.granary.resource_stored[RESOURCE_NONE] < 2400)
                     image_draw(image_id_from_group(GROUP_BUILDING_GRANARY) + 2, x + 33, y - 60, color_mask);
@@ -489,8 +489,8 @@ static void draw_animation(int x, int y, int grid_offset) {
             } else {
                 int animation_offset = building_animation_offset(b, image_id, grid_offset, 0);
                 if (animation_offset > 0) {
-                    if (animation_offset > img->num_animation_sprites)
-                        animation_offset = img->num_animation_sprites;
+                    if (animation_offset > img->get_num_animation_sprites())
+                        animation_offset = img->get_num_animation_sprites();
                     int ydiff = 0;
                     switch (map_property_multi_tile_size(grid_offset)) {
                         case 1:
@@ -510,8 +510,8 @@ static void draw_animation(int x, int y, int grid_offset) {
                             break;
                     }
                     image_draw(image_id + animation_offset,
-                               x + img->sprite_offset_x,
-                               y + ydiff + img->sprite_offset_y - img->height,
+                               x + img->get_sprite_offset_x(),
+                               y + ydiff + img->get_sprite_offset_y() - img->get_height(),
                                color_mask);
                 }
             }

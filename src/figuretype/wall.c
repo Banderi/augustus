@@ -4,7 +4,7 @@
 #include "city/view.h"
 #include "core/calc.h"
 #include "core/config.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "figure/combat.h"
 #include "figure/enemy_army.h"
 #include "figure/image.h"

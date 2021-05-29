@@ -2,6 +2,7 @@
 
 #include "core/time.h"
 #include "graphics/image.h"
+#include "core/game_images.h"
 
 static const int REPEATS[] = {
         0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0,

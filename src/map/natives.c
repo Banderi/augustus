@@ -5,7 +5,7 @@
 #include "city/buildings.h"
 #include "city/military.h"
 #include "core/calc.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/image_group_editor.h"
 #include "map/building.h"
 #include "map/building_tiles.h"

@@ -1,6 +1,7 @@
 #include "image.h"
 
 #include "core/log.h"
+#include "core/game_images.h"
 #include "graphics/graphics.h"
 #include "graphics/screen.h"
 
@@ -49,26 +50,26 @@ static void draw_modded_footprint(int image_id, int x_offset, int y_offset, colo
     const color_t *data = image_data(image_id);
     if (!data)
         return;
-    int tiles = (img->width + 2) / (FOOTPRINT_WIDTH + 2);
-    int y_top_offset = img->height - FOOTPRINT_HEIGHT * tiles;
+    int tiles = (img->get_width() + 2) / (FOOTPRINT_WIDTH + 2);
+    int y_top_offset = img->get_height() - FOOTPRINT_HEIGHT * tiles;
     y_offset -= y_top_offset + FOOTPRINT_HALF_HEIGHT * tiles - FOOTPRINT_HALF_HEIGHT;
-    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset + y_top_offset, img->width,
-                                                   img->height - y_top_offset);
+    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset + y_top_offset, img->get_width(),
+                                                   img->get_height() - y_top_offset);
     if (!clip->is_visible)
         return;
-    data += img->width * (clip->clipped_pixels_top + y_top_offset);
-    for (int y = clip->clipped_pixels_top + y_top_offset; y < img->height - clip->clipped_pixels_bottom; y++) {
-        int visible_pixels_per_row = get_visible_footprint_pixels_per_row(tiles, img->width, img->height, y);
-        int x_start = (img->width - visible_pixels_per_row) / 2;
-        int x_max = img->width - x_start;
+    data += img->get_width() * (clip->clipped_pixels_top + y_top_offset);
+    for (int y = clip->clipped_pixels_top + y_top_offset; y < img->get_height() - clip->clipped_pixels_bottom; y++) {
+        int visible_pixels_per_row = get_visible_footprint_pixels_per_row(tiles, img->get_width(), img->get_height(), y);
+        int x_start = (img->get_width() - visible_pixels_per_row) / 2;
+        int x_max = img->get_width() - x_start;
         if (x_start < clip->clipped_pixels_left)
             x_start = clip->clipped_pixels_left;
 
-        if (x_max > img->width - clip->clipped_pixels_right)
-            x_max = img->width - clip->clipped_pixels_right;
+        if (x_max > img->get_width() - clip->clipped_pixels_right)
+            x_max = img->get_width() - clip->clipped_pixels_right;
 
         if (x_start >= x_max) {
-            data += img->width;
+            data += img->get_width();
             continue;
         }
         color_t *dst = graphics_get_pixel(x_offset + x_start, y_offset + y);
@@ -90,7 +91,7 @@ static void draw_modded_footprint(int image_id, int x_offset, int y_offset, colo
                 data++;
             }
         }
-        data += img->width - x_max;
+        data += img->get_width() - x_max;
     }
 }
 static void draw_modded_top(int image_id, int x_offset, int y_offset, color_t color) {
@@ -98,18 +99,18 @@ static void draw_modded_top(int image_id, int x_offset, int y_offset, color_t co
     const color_t *data = image_data(image_id);
     if (!data)
         return;
-    int tiles = (img->width + 2) / (FOOTPRINT_WIDTH + 2);
-    int y_top_offset = img->height - FOOTPRINT_HEIGHT * tiles;
+    int tiles = (img->get_width() + 2) / (FOOTPRINT_WIDTH + 2);
+    int y_top_offset = img->get_height() - FOOTPRINT_HEIGHT * tiles;
     y_top_offset += FOOTPRINT_HALF_HEIGHT * tiles - FOOTPRINT_HALF_HEIGHT;
     y_offset -= y_top_offset;
-    int height = img->height - FOOTPRINT_HALF_HEIGHT * tiles;
-    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->width, height);
+    int height = img->get_height() - FOOTPRINT_HALF_HEIGHT * tiles;
+    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->get_width(), height);
     if (!clip->is_visible)
         return;
-    data += img->width * clip->clipped_pixels_top;
+    data += img->get_width() * clip->clipped_pixels_top;
     for (int y = clip->clipped_pixels_top; y < height - clip->clipped_pixels_bottom; y++) {
-        int visible_pixels_per_row = get_visible_footprint_pixels_per_row(tiles, img->width, img->height, y);
-        int half_width = img->width / 2;
+        int visible_pixels_per_row = get_visible_footprint_pixels_per_row(tiles, img->get_width(), img->get_height(), y);
+        int half_width = img->get_width() / 2;
         int half_visible_pixels = visible_pixels_per_row / 2;
         int x_start = clip->clipped_pixels_left;
         if (x_start < half_width) {
@@ -120,8 +121,8 @@ static void draw_modded_top(int image_id, int x_offset, int y_offset, color_t co
 
             data += x_start;
             int half_image_only = 0;
-            if (img->width - clip->clipped_pixels_right < x_max) {
-                x_max = img->width - clip->clipped_pixels_right;
+            if (img->get_width() - clip->clipped_pixels_right < x_max) {
+                x_max = img->get_width() - clip->clipped_pixels_right;
                 half_image_only = 1;
             }
             if (color && color != COLOR_MASK_NONE) {
@@ -158,7 +159,7 @@ static void draw_modded_top(int image_id, int x_offset, int y_offset, color_t co
 
             data += x_start;
         }
-        int x_max = img->width - clip->clipped_pixels_right;
+        int x_max = img->get_width() - clip->clipped_pixels_right;
         color_t *dst = graphics_get_pixel(x_offset + x_start, y_offset + y);
         if (color && color != COLOR_MASK_NONE) {
             for (int x = x_start; x < x_max; x++, dst++) {
@@ -188,14 +189,14 @@ static void draw_modded_top(int image_id, int x_offset, int y_offset, color_t co
     }
 }
 static void draw_modded_image(const image *img, const color_t *data, int x_offset, int y_offset, color_t color) {
-    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->width, img->height);
+    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->get_width(), img->get_height());
     if (!clip->is_visible)
         return;
-    data += img->width * clip->clipped_pixels_top;
-    for (int y = clip->clipped_pixels_top; y < img->height - clip->clipped_pixels_bottom; y++) {
+    data += img->get_width() * clip->clipped_pixels_top;
+    for (int y = clip->clipped_pixels_top; y < img->get_height() - clip->clipped_pixels_bottom; y++) {
         data += clip->clipped_pixels_left;
         color_t *dst = graphics_get_pixel(x_offset + clip->clipped_pixels_left, y_offset + y);
-        int x_max = img->width - clip->clipped_pixels_right;
+        int x_max = img->get_width() - clip->clipped_pixels_right;
         if (color && color != COLOR_MASK_NONE) {
             for (int x = clip->clipped_pixels_left; x < x_max; x++, dst++) {
                 color_t alpha = *data & COLOR_CHANNEL_ALPHA;
@@ -221,20 +222,20 @@ static void draw_modded_image(const image *img, const color_t *data, int x_offse
     }
 }
 static void draw_uncompressed(const image *img, const color_t *data, int x_offset, int y_offset, color_t color, draw_type type) {
-    if (img->draw.type == IMAGE_TYPE_MOD) {
+    if (img->get_type() == IMAGE_TYPE_MOD) {
         draw_modded_image(img, data, x_offset, y_offset, color);
         return;
     }
-    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->width, img->height);
+    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->get_width(), img->get_height());
     if (!clip->is_visible)
         return;
-    data += img->width * clip->clipped_pixels_top;
-    for (int y = clip->clipped_pixels_top; y < img->height - clip->clipped_pixels_bottom; y++) {
+    data += img->get_width() * clip->clipped_pixels_top;
+    for (int y = clip->clipped_pixels_top; y < img->get_height() - clip->clipped_pixels_bottom; y++) {
         data += clip->clipped_pixels_left;
         color_t *dst = graphics_get_pixel(x_offset + clip->clipped_pixels_left, y_offset + y);
-        int x_max = img->width - clip->clipped_pixels_right;
+        int x_max = img->get_width() - clip->clipped_pixels_right;
         if (type == DRAW_TYPE_NONE) {
-            if (img->draw.type == IMAGE_TYPE_WITH_TRANSPARENCY || img->draw.is_external) { // can be transparent
+            if (img->get_type() == IMAGE_TYPE_WITH_TRANSPARENCY || img->is_external()) { // can be transparent
                 for (int x = clip->clipped_pixels_left; x < x_max; x++, dst++) {
                     if (*data != COLOR_SG2_TRANSPARENT)
                         *dst = *data;
@@ -286,15 +287,15 @@ static void draw_uncompressed(const image *img, const color_t *data, int x_offse
     }
 }
 static void draw_compressed(const image *img, const color_t *data, int x_offset, int y_offset, int height) {
-    bool mirr = (img->offset_mirror != 0);
-    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->width, height, mirr);
+    bool mirr = (img->get_offset_mirror() != 0);
+    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->get_width(), height, mirr);
     if (!clip->is_visible)
         return;
     int unclipped = clip->clip_x == CLIP_NONE;
 
     for (int y = 0; y < height - clip->clipped_pixels_bottom; y++) {
         int x = 0;
-        while (x < img->width) {
+        while (x < img->get_width()) {
             color_t b = *data;
             data++;
             if (b == 255) {
@@ -310,7 +311,7 @@ static void draw_compressed(const image *img, const color_t *data, int x_offset,
                 data += b;
                 color_t *dst;
                 if (mirr)
-                    dst = graphics_get_pixel(x_offset + img->width - x - b, y_offset + y);
+                    dst = graphics_get_pixel(x_offset + img->get_width() - x - b, y_offset + y);
                 else
                     dst = graphics_get_pixel(x_offset + x, y_offset + y);
                 if (unclipped) {
@@ -327,7 +328,7 @@ static void draw_compressed(const image *img, const color_t *data, int x_offset,
                         int a = 3565;
 
                     while (b) {
-                        if (x >= clip->clipped_pixels_left && x < img->width - clip->clipped_pixels_right)
+                        if (x >= clip->clipped_pixels_left && x < img->get_width() - clip->clipped_pixels_right)
                             *dst = *pixels;
 
                         dst++;
@@ -341,14 +342,14 @@ static void draw_compressed(const image *img, const color_t *data, int x_offset,
     }
 }
 static void draw_compressed_set(const image *img, const color_t *data, int x_offset, int y_offset, int height, color_t color) {
-    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->width, height);
+    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->get_width(), height);
     if (!clip->is_visible)
         return;
     int unclipped = clip->clip_x == CLIP_NONE;
 
     for (int y = 0; y < height - clip->clipped_pixels_bottom; y++) {
         int x = 0;
-        while (x < img->width) {
+        while (x < img->get_width()) {
             color_t b = *data;
             data++;
             if (b == 255) {
@@ -370,7 +371,7 @@ static void draw_compressed_set(const image *img, const color_t *data, int x_off
                     }
                 } else {
                     while (b) {
-                        if (x >= clip->clipped_pixels_left && x < img->width - clip->clipped_pixels_right)
+                        if (x >= clip->clipped_pixels_left && x < img->get_width() - clip->clipped_pixels_right)
                             *dst = color;
 
                         dst++;
@@ -383,14 +384,14 @@ static void draw_compressed_set(const image *img, const color_t *data, int x_off
     }
 }
 static void draw_compressed_and(const image *img, const color_t *data, int x_offset, int y_offset, int height, color_t color) {
-    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->width, height);
+    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->get_width(), height);
     if (!clip->is_visible)
         return;
     int unclipped = clip->clip_x == CLIP_NONE;
 
     for (int y = 0; y < height - clip->clipped_pixels_bottom; y++) {
         int x = 0;
-        while (x < img->width) {
+        while (x < img->get_width()) {
             color_t b = *data;
             data++;
             if (b == 255) {
@@ -415,7 +416,7 @@ static void draw_compressed_and(const image *img, const color_t *data, int x_off
                     }
                 } else {
                     while (b) {
-                        if (x >= clip->clipped_pixels_left && x < img->width - clip->clipped_pixels_right)
+                        if (x >= clip->clipped_pixels_left && x < img->get_width() - clip->clipped_pixels_right)
                             *dst = *pixels & color;
 
                         dst++;
@@ -429,14 +430,14 @@ static void draw_compressed_and(const image *img, const color_t *data, int x_off
     }
 }
 static void draw_compressed_blend(const image *img, const color_t *data, int x_offset, int y_offset, int height, color_t color) {
-    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->width, height);
+    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->get_width(), height);
     if (!clip->is_visible)
         return;
     int unclipped = clip->clip_x == CLIP_NONE;
 
     for (int y = 0; y < height - clip->clipped_pixels_bottom; y++) {
         int x = 0;
-        while (x < img->width) {
+        while (x < img->get_width()) {
             color_t b = *data;
             data++;
             if (b == 255) {
@@ -458,7 +459,7 @@ static void draw_compressed_blend(const image *img, const color_t *data, int x_o
                     }
                 } else {
                     while (b) {
-                        if (x >= clip->clipped_pixels_left && x < img->width - clip->clipped_pixels_right)
+                        if (x >= clip->clipped_pixels_left && x < img->get_width() - clip->clipped_pixels_right)
                             *dst &= color;
 
                         dst++;
@@ -472,7 +473,7 @@ static void draw_compressed_blend(const image *img, const color_t *data, int x_o
 }
 static void draw_compressed_blend_alpha(const image *img, const color_t *data, int x_offset, int y_offset, int height,
                                         color_t color) {
-    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->width, height);
+    const clip_info *clip = graphics_get_clip_info(x_offset, y_offset, img->get_width(), height);
     if (!clip->is_visible)
         return;
     color_t alpha = COLOR_COMPONENT(color, COLOR_BITSHIFT_ALPHA);
@@ -490,7 +491,7 @@ static void draw_compressed_blend_alpha(const image *img, const color_t *data, i
     for (int y = 0; y < height - clip->clipped_pixels_bottom; y++) {
         int x = 0;
         color_t *dst = graphics_get_pixel(x_offset, y_offset + y);
-        while (x < img->width) {
+        while (x < img->get_width()) {
             color_t b = *data;
             data++;
             if (b == 255) {
@@ -515,7 +516,7 @@ static void draw_compressed_blend_alpha(const image *img, const color_t *data, i
                     }
                 } else {
                     while (b) {
-                        if (x >= clip->clipped_pixels_left && x < img->width - clip->clipped_pixels_right) {
+                        if (x >= clip->clipped_pixels_left && x < img->get_width() - clip->clipped_pixels_right) {
                             color_t d = *dst;
                             *dst = (((src_rb + (d & 0xff00ff) * alpha_dst) & 0xff00ff00) |
                                     ((src_g + (d & 0x00ff00) * alpha_dst) & 0x00ff0000)) >> 8;
@@ -729,7 +730,7 @@ void image_draw(int image_id, int x, int y, color_t color_mask) {
     const color_t *data = image_data(image_id);
     if (!data)
         return;
-    if (img->draw.type == IMAGE_TYPE_ISOMETRIC) {
+    if (img->get_type() == IMAGE_TYPE_ISOMETRIC) {
         log_error("use image_draw_isometric_footprint for isometric!", 0, image_id);
         return;
     }
@@ -746,31 +747,31 @@ void image_draw(int image_id, int x, int y, color_t color_mask) {
 //            y += img->sprite_offset_y;
 //            break;
 //        case 3:
-//            y -= img->height;
+//            y -= img->get_height();
 //            break;
 //        case 4:
 //            x -= img->sprite_offset_x;
 //            y -= img->sprite_offset_y;
-//            y -= img->height;
+//            y -= img->get_height();
 //            break;
 //        case 5:
 //            x += img->sprite_offset_x;
 //            y += img->sprite_offset_y;
-//            y -= img->height;
+//            y -= img->get_height();
 //            break;
 //    }
 
-    if (img->draw.is_fully_compressed) {
+    if (img->is_fully_compressed()) {
         if (!color_mask)
-            draw_compressed(img, data, x, y, img->height);
+            draw_compressed(img, data, x, y, img->get_height());
         else
-            draw_compressed_and(img, data, x, y, img->height, color_mask);
+            draw_compressed_and(img, data, x, y, img->get_height(), color_mask);
     } else
         draw_uncompressed(img, data, x, y, color_mask, color_mask ? DRAW_TYPE_AND : DRAW_TYPE_NONE);
 }
 void image_draw_sprite(int image_id, int x, int y, color_t color_mask) {
     const image *img = image_get(image_id);
-    image_draw(image_id, x - img->sprite_offset_x, y - img->sprite_offset_y, color_mask);
+    image_draw(image_id, x - img->get_sprite_offset_x(), y - img->get_sprite_offset_y(), color_mask);
 }
 void image_draw_enemy(int image_id, int x, int y) {
     if (image_id <= 0 || image_id >= 801)
@@ -778,7 +779,7 @@ void image_draw_enemy(int image_id, int x, int y) {
     const image *img = image_get_enemy(image_id);
     const color_t *data = image_data_enemy(image_id);
     if (data)
-        draw_compressed(img, data, x, y, img->height);
+        draw_compressed(img, data, x, y, img->get_height());
 }
 void image_draw_blend(int image_id, int x, int y, color_t color) {
     const image *img = image_get(image_id);
@@ -786,11 +787,11 @@ void image_draw_blend(int image_id, int x, int y, color_t color) {
     if (!data)
         return;
 
-    if (img->draw.type == IMAGE_TYPE_ISOMETRIC)
+    if (img->get_type() == IMAGE_TYPE_ISOMETRIC)
         return;
 
-    if (img->draw.is_fully_compressed)
-        draw_compressed_blend(img, data, x, y, img->height, color);
+    if (img->is_fully_compressed())
+        draw_compressed_blend(img, data, x, y, img->get_height(), color);
     else {
         draw_uncompressed(img, data, x, y, color, DRAW_TYPE_BLEND);
     }
@@ -801,11 +802,11 @@ void image_draw_blend_alpha(int image_id, int x, int y, color_t color) {
     if (!data)
         return;
 
-    if (img->draw.type == IMAGE_TYPE_ISOMETRIC)
+    if (img->get_type() == IMAGE_TYPE_ISOMETRIC)
         return;
 
-    if (img->draw.is_fully_compressed)
-        draw_compressed_blend_alpha(img, data, x, y, img->height, color);
+    if (img->is_fully_compressed())
+        draw_compressed_blend_alpha(img, data, x, y, img->get_height(), color);
     else {
         draw_uncompressed(img, data, x, y, color, DRAW_TYPE_BLEND_ALPHA);
     }
@@ -850,16 +851,16 @@ void image_draw_letter(font_t font, int letter_id, int x, int y, color_t color) 
         return;
     }
     if (font == FONT_NORMAL_SHADED) {
-        if (img->draw.is_fully_compressed) {
-            draw_compressed(img, data, x + 1, y + 1, img->height);
+        if (img->is_fully_compressed()) {
+            draw_compressed(img, data, x + 1, y + 1, img->get_height());
         } else
             draw_uncompressed(img, data, x + 1, y + 1, 0, DRAW_TYPE_NONE);
     }
-    if (img->draw.is_fully_compressed) {
+    if (img->is_fully_compressed()) {
         if (color)
-            draw_compressed_set(img, data, x, y, img->height, color);
+            draw_compressed_set(img, data, x, y, img->get_height(), color);
         else
-            draw_compressed(img, data, x, y, img->height);
+            draw_compressed(img, data, x, y, img->get_height());
     } else
         draw_uncompressed(img, data, x, y, color, color ? DRAW_TYPE_SET : DRAW_TYPE_NONE);
 }
@@ -873,12 +874,12 @@ void image_draw_fullscreen_background(int image_id) {
 }
 void image_draw_isometric_footprint(int image_id, int x, int y, color_t color_mask) {
     const image *img = image_get(image_id);
-    if (img->draw.type != IMAGE_TYPE_ISOMETRIC) {
-        if (img->draw.type == IMAGE_TYPE_MOD)
+    if (img->get_type() != IMAGE_TYPE_ISOMETRIC) {
+        if (img->get_type() == IMAGE_TYPE_MOD)
             draw_modded_footprint(image_id, x, y, color_mask);
         return;
     }
-    switch (img->width) {
+    switch (img->get_width()) {
         case 58:
             draw_footprint_size1(image_id, x, y, color_mask);
             break;
@@ -898,14 +899,14 @@ void image_draw_isometric_footprint(int image_id, int x, int y, color_t color_ma
 }
 void image_draw_isometric_footprint_from_draw_tile(int image_id, int x, int y, color_t color_mask) {
     const image *img = image_get(image_id, 1);
-    if (img->draw.type != IMAGE_TYPE_ISOMETRIC) {
-        if (img->draw.type == IMAGE_TYPE_MOD)
+    if (img->get_type() != IMAGE_TYPE_ISOMETRIC) {
+        if (img->get_type() == IMAGE_TYPE_MOD)
             draw_modded_footprint(image_id, x, y, color_mask);
         else
             draw_footprint_size1(image_id, x, y, color_mask);
         return;
     }
-    switch (img->width) {
+    switch (img->get_width()) {
         case 58:
             draw_footprint_size1(image_id, x, y, color_mask);
             break;
@@ -925,40 +926,40 @@ void image_draw_isometric_footprint_from_draw_tile(int image_id, int x, int y, c
 }
 void image_draw_isometric_top(int image_id, int x, int y, color_t color_mask) {
     const image *img = image_get(image_id);
-    if (img->draw.type != IMAGE_TYPE_ISOMETRIC) {
-        if (img->draw.type == IMAGE_TYPE_MOD)
+    if (img->get_type() != IMAGE_TYPE_ISOMETRIC) {
+        if (img->get_type() == IMAGE_TYPE_MOD)
             draw_modded_top(image_id, x, y, color_mask);
 
         return;
     }
-    if (!img->draw.has_compressed_part)
+    if (!img->has_compressed_part())
         return;
-    const color_t *data = &image_data(image_id)[img->draw.uncompressed_length];
+    const color_t *data = &image_data(image_id)[img->get_uncompressed_length()];
 
-    int height = img->height;
-    switch (img->width) {
+    int height = img->get_height();
+    switch (img->get_width()) {
         case 58:
-            y -= img->height - 30;
+            y -= img->get_height() - 30;
             height -= 16;
             break;
         case 118:
             x -= 30;
-            y -= img->height - 60;
+            y -= img->get_height() - 60;
             height -= 31;
             break;
         case 178:
             x -= 60;
-            y -= img->height - 90;
+            y -= img->get_height() - 90;
             height -= 46;
             break;
         case 238:
             x -= 90;
-            y -= img->height - 120;
+            y -= img->get_height() - 120;
             height -= 61;
             break;
         case 298:
             x -= 120;
-            y -= img->height - 150;
+            y -= img->get_height() - 150;
             height -= 76;
             break;
     }
@@ -969,36 +970,36 @@ void image_draw_isometric_top(int image_id, int x, int y, color_t color_mask) {
 }
 void image_draw_isometric_top_from_draw_tile(int image_id, int x, int y, color_t color_mask) {
     const image *img = image_get(image_id);
-    if (img->draw.type != IMAGE_TYPE_ISOMETRIC) {
-        if (img->draw.type == IMAGE_TYPE_MOD)
+    if (img->get_type() != IMAGE_TYPE_ISOMETRIC) {
+        if (img->get_type() == IMAGE_TYPE_MOD)
             draw_modded_top(image_id, x, y, color_mask);
 
         return;
     }
-    if (!img->draw.has_compressed_part)
+    if (!img->has_compressed_part())
         return;
-    const color_t *data = &image_data(image_id)[img->draw.uncompressed_length];
+    const color_t *data = &image_data(image_id)[img->get_uncompressed_length()];
 
-    int height = img->height;
-    switch (img->width) {
+    int height = img->get_height();
+    switch (img->get_width()) {
         case 58:
-            y -= img->height - 30;
+            y -= img->get_height() - 30;
             height -= 16;
             break;
         case 118:
-            y -= img->height - 45;
+            y -= img->get_height() - 45;
             height -= 31;
             break;
         case 178:
-            y -= img->height - 60;
+            y -= img->get_height() - 60;
             height -= 46;
             break;
         case 238:
-            y -= img->height - 75;
+            y -= img->get_height() - 75;
             height -= 61;
             break;
         case 298:
-            y -= img->height - 90;
+            y -= img->get_height() - 90;
             height -= 76;
             break;
     }

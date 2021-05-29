@@ -1,13 +1,12 @@
-#include "rich_text.h"
-
 #include "core/calc.h"
-#include "core/image.h"
 #include "core/image_group.h"
 #include "core/string.h"
+#include "core/game_images.h"
 #include "graphics/image.h"
 #include "graphics/image_button.h"
 #include "graphics/scrollbar.h"
 #include "graphics/window.h"
+#include "graphics/rich_text.h"
 
 #define MAX_LINKS 50
 
@@ -152,7 +151,7 @@ static int get_word_width(const uint8_t *str, int in_link, int *num_chars) {
             // normal char
             int letter_id = font_letter_id(normal_font_def, str, &num_bytes);
             if (letter_id >= 0)
-                width += 1 + image_letter(letter_id)->width;
+                width += 1 + image_letter(letter_id)->get_width();
 
             word_char_seen = 1;
             if (num_bytes > 1) {
@@ -204,10 +203,10 @@ static void draw_line(const uint8_t *str, int x, int y, color_t color, int measu
                 }
                 const image *img = image_letter(letter_id);
                 if (!measure_only) {
-                    int height = def->image_y_offset(*str, img->height, def->line_height);
+                    int height = def->image_y_offset(*str, img->get_height(), def->line_height);
                     image_draw_letter(def->font, letter_id, x, y - height, color);
                 }
-                x += img->width + def->letter_spacing;
+                x += img->get_width() + def->letter_spacing;
             }
             if (num_link_chars > 0)
                 num_link_chars -= num_bytes;
@@ -278,7 +277,7 @@ static int draw_text(const uint8_t *text, int x_offset, int y_offset,
                                 c = *text++;
                             }
                             image_id += image_id_from_group(GROUP_MESSAGE_IMAGES) - 1;
-                            image_height_lines = image_get(image_id)->height / 16 + 2;
+                            image_height_lines = image_get(image_id)->get_height() / 16 + 2;
                             if (line > 0)
                                 lines_before_image = 1;
 
@@ -310,8 +309,8 @@ static int draw_text(const uint8_t *text, int x_offset, int y_offset,
                     lines_before_image--;
                 else {
                     const image *img = image_get(image_id);
-                    image_height_lines = img->height / 16 + 2;
-                    int image_offset_x = x_offset + (box_width - img->width) / 2 - 4;
+                    image_height_lines = img->get_height() / 16 + 2;
+                    int image_offset_x = x_offset + (box_width - img->get_width()) / 2 - 4;
                     if (line < height_lines + scrollbar.scroll_position) {
                         if (line >= scrollbar.scroll_position)
                             image_draw(image_id, image_offset_x, y + 8);

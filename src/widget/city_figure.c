@@ -230,19 +230,19 @@ void figure::draw_fort_standard(int x, int y) {
         // base
         image_draw(sprite_image_id, x, y);
         // flag
-        int flag_height = image_get(cart_image_id)->height;
+        int flag_height = image_get(cart_image_id)->get_height();
         image_draw(cart_image_id, x, y - flag_height);
         // top icon
         int icon_image_id =
                 image_id_from_group(GROUP_FIGURE_FORT_STANDARD_ICONS) + formation_get(formation_id)->legion_id;
-        image_draw(icon_image_id, x, y - image_get(icon_image_id)->height - flag_height);
+        image_draw(icon_image_id, x, y - image_get(icon_image_id)->get_height() - flag_height);
     }
 }
 void figure::draw_map_flag(int x, int y) {
     // base
     image_draw(sprite_image_id, x, y);
     // flag
-    image_draw(cart_image_id, x, y - image_get(cart_image_id)->height);
+    image_draw(cart_image_id, x, y - image_get(cart_image_id)->get_height());
     // flag number
     int number = 0;
     int id = resource_id;
@@ -316,8 +316,8 @@ void figure::adjust_pixel_offset(int *x, int *y) {
     *y += y_offset + 15 + 8;
 
 //    const image *img = is_enemy_image ? image_get_enemy(sprite_image_id) : image_get(sprite_image_id);
-//    *x += x_offset - img->sprite_offset_x;
-//    *y += y_offset - img->sprite_offset_y;
+//    *x += x_offset - img->get_sprite_offset_x;
+//    *y += y_offset - img->get_sprite_offset_y;
 }
 void figure::draw_figure_main(int x, int y) {
 
@@ -337,14 +337,14 @@ void figure::draw_figure_main(int x, int y) {
 
     const image *img = is_enemy_image ? image_get_enemy(sprite_image_id) : image_get(sprite_image_id);
     if (is_enemy_image)
-        image_draw_enemy(sprite_image_id, x + _x - img->sprite_offset_x, y + _y - img->sprite_offset_y);
+        image_draw_enemy(sprite_image_id, x + _x - img->get_sprite_offset_x(), y + _y - img->get_sprite_offset_y());
     else
-        image_draw(sprite_image_id, x + _x - img->sprite_offset_x, y + _y - img->sprite_offset_y);
+        image_draw(sprite_image_id, x + _x - img->get_sprite_offset_x(), y + _y - img->get_sprite_offset_y());
 }
 void figure::draw_figure_cart(int x, int y) {
     const image *img = image_get(cart_image_id);
-    image_draw(cart_image_id, x + x_offset_cart - img->sprite_offset_x,
-               y + y_offset_cart - img->sprite_offset_y - 7);
+    image_draw(cart_image_id, x + x_offset_cart - img->get_sprite_offset_x(),
+               y + y_offset_cart - img->get_sprite_offset_y() - 7);
 }
 void figure::draw_figure_with_cart(int x, int y) {
     draw_figure_cart(x, y);

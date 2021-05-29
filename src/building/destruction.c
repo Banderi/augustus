@@ -3,7 +3,7 @@
 #include "city/message.h"
 #include "city/population.h"
 #include "city/ratings.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "figuretype/missile.h"
 #include "figuretype/wall.h"
 #include "game/undo.h"

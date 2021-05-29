@@ -1,7 +1,7 @@
 #include "missile.h"
 
 #include "city/view.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "figure/formation.h"
 #include "figure/movement.h"
 #include "figure/properties.h"

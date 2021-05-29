@@ -1,6 +1,6 @@
-#include "panel.h"
-
+#include "graphics/panel.h"
 #include "graphics/image.h"
+#include "core/game_images.h"
 
 void outer_panel_draw(int x, int y, int width_blocks, int height_blocks) {
     int image_base = image_id_from_group(GROUP_DIALOG_BACKGROUND);

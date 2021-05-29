@@ -194,8 +194,8 @@ void window_building_draw_legion_info(building_info_context *c) {
 
     // standard icon at the top
     int image_id = image_id_from_group(GROUP_FIGURE_FORT_STANDARD_ICONS) + m->legion_id;
-    int icon_height = image_get(image_id)->height;
-    image_draw(image_id, c->x_offset + 16 + (40 - image_get(image_id)->width) / 2, c->y_offset + 16);
+    int icon_height = image_get(image_id)->get_height();
+    image_draw(image_id, c->x_offset + 16 + (40 - image_get(image_id)->get_width()) / 2, c->y_offset + 16);
     // standard flag
     image_id = image_id_from_group(GROUP_FIGURE_FORT_FLAGS);
     if (m->figure_type == FIGURE_FORT_JAVELIN)
@@ -206,12 +206,12 @@ void window_building_draw_legion_info(building_info_context *c) {
     if (m->is_halted)
         image_id += 8;
 
-    int flag_height = image_get(image_id)->height;
-    image_draw(image_id, c->x_offset + 16 + (40 - image_get(image_id)->width) / 2,
+    int flag_height = image_get(image_id)->get_height();
+    image_draw(image_id, c->x_offset + 16 + (40 - image_get(image_id)->get_width()) / 2,
                c->y_offset + 16 + icon_height);
     // standard pole and morale ball
     image_id = image_id_from_group(GROUP_FIGURE_FORT_STANDARD_POLE) + 20 - m->morale / 5;
-    image_draw(image_id, c->x_offset + 16 + (40 - image_get(image_id)->width) / 2,
+    image_draw(image_id, c->x_offset + 16 + (40 - image_get(image_id)->get_width()) / 2,
                c->y_offset + 16 + icon_height + flag_height);
 
     // number of soldiers

@@ -26,7 +26,7 @@ static int focus_button_id;
 
 static void draw_rating_column(int x_offset, int y_offset, int value, int has_reached) {
     int image_base = image_id_from_group(GROUP_RATINGS_COLUMN);
-    int y = y_offset - image_get(image_base)->height;
+    int y = y_offset - image_get(image_base)->get_height();
     int value_to_draw = value;
     if (config_get(CONFIG_UI_COMPLETE_RATING_COLUMNS)) {
         if (has_reached && value < 25)

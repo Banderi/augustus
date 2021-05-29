@@ -4,7 +4,7 @@
 #include "building/granary.h"
 #include "building/storage.h"
 #include "building/warehouse.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "figure/combat.h"
 #include "figure/image.h"
 #include "figure/movement.h"

@@ -3,9 +3,10 @@
 
 #include "core/dir.h"
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
 
 /**
  * @file
@@ -47,7 +48,7 @@ int file_has_extension(const char *filename, const char *extension);
  * @param[in,out] filename Filename to change
  * @param new_extension New extension
  */
-void file_change_extension(char *filename, const char *new_extension);
+void file_change_extension(std::string &filename, std::string new_extension);
 
 /**
  * Appends the extension to the file

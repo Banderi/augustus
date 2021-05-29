@@ -10,7 +10,7 @@
 #include "city/military.h"
 #include "city/resource.h"
 #include "core/calc.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "empire/trade_prices.h"
 #include "game/tutorial.h"
 #include "map/image.h"

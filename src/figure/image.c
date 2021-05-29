@@ -27,7 +27,7 @@ static const int MISSILE_LAUNCHER_OFFSETS[128] = {
 static const int CART_OFFSETS_X[] = {17, 22, 17, 0, -17, -22, -17, 0};
 static const int CART_OFFSETS_Y[] = {-7, -1, 7, 11, 6, -1, -7, -12};
 
-#include "core/image.h"
+#include "core/game_images.h"
 #include "game/resource.h"
 
 void figure::image_set_animation(int group, int offset, int max_frames, int duration) {

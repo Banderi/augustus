@@ -1,7 +1,7 @@
 #include "tool.h"
 
 #include "building/construction_routed.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/image_group_editor.h"
 #include "core/random.h"
 #include "editor/tool_restriction.h"

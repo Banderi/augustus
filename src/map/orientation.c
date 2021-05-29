@@ -3,7 +3,7 @@
 #include "building/rotation.h"
 #include "city/view.h"
 #include "core/direction.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "figuretype/animal.h"
 #include "figuretype/wall.h"
 #include "game/undo.h"

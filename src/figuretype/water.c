@@ -5,7 +5,7 @@
 #include "city/gods.h"
 #include "city/message.h"
 #include "core/calc.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/random.h"
 #include "figure/image.h"
 #include "figure/movement.h"

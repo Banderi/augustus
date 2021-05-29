@@ -19,7 +19,7 @@
 #include "city/warning.h"
 #include "core/calc.h"
 #include "core/config.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/random.h"
 #include "figure/formation.h"
 #include "figure/formation_legion.h"

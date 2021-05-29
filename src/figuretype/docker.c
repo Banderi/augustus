@@ -6,7 +6,7 @@
 #include "city/buildings.h"
 #include "city/trade.h"
 #include "core/calc.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "empire/city.h"
 #include "empire/empire.h"
 #include "empire/trade_route.h"

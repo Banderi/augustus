@@ -5,7 +5,7 @@
 #include "city/figures.h"
 #include "city/view.h"
 #include "core/calc.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/random.h"
 #include "figure/combat.h"
 #include "figure/formation.h"

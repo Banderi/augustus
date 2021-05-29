@@ -4,7 +4,7 @@
 #include "building/model.h"
 #include "core/config.h"
 #include "core/hotkey_config.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/lang.h"
 #include "core/locale.h"
 #include "core/log.h"
@@ -71,11 +71,11 @@ static int reload_language(int is_editor, int reload_images) {
     }
     encoding_type encoding = update_encoding();
 
-    if (!image_load_fonts(encoding)) {
+    if (!game_images::get().load_fonts(encoding)) {
         errlog("unable to load font graphics");
         return 0;
     }
-    if (!image_load_main(CLIMATE_CENTRAL, is_editor, reload_images)) {
+    if (!game_images::get().load_main(CLIMATE_CENTRAL, is_editor, reload_images)) {
         errlog("unable to load main graphics");
         return 0;
     }
@@ -143,38 +143,16 @@ int game_init(void) {
 //        return 0;
 //    }
 
-
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-//    image_load_main(CLIMATE_CENTRAL, 0, 0);
-
-
-
-
-
-
-    if (!image_load_main(CLIMATE_CENTRAL, 0, 0)) {
+    if (!game_images::get().load_main(CLIMATE_CENTRAL, 0, 0)) {
         errlog("unable to load main graphics");
         return 0;
     }
-    if (!image_load_enemy(ENEMY_0_BARBARIAN)) {
+    if (!game_images::get().load_enemy(ENEMY_0_BARBARIAN)) {
         errlog("unable to load enemy graphics");
         return 0;
     }
     int missing_fonts = 0;
-    if (!image_load_fonts(encoding_get())) {
+    if (!game_images::get().load_fonts(encoding_get())) {
         errlog("unable to load font graphics");
         if (encoding_get() == ENCODING_KOREAN)
             missing_fonts = 1;

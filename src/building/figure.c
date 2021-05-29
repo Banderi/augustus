@@ -13,7 +13,7 @@
 #include "city/population.h"
 #include "core/calc.h"
 #include "core/config.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "figure/figure.h"
 #include "figure/formation_legion.h"
 #include "figure/movement.h"

@@ -38,4 +38,10 @@ int io_read_file_part_into_buffer(const char *filepath, int localizable, buffer 
  */
 int io_write_buffer_to_file(const char *filepath, buffer *buf, int size);
 
+/**
+ * Gets size in bytes of the file
+ * @param filepath File to write
+ */
+size_t io_get_file_size(const char *filepath);
+
 #endif // CORE_IO_H

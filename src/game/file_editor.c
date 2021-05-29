@@ -7,7 +7,7 @@
 #include "city/message.h"
 #include "city/victory.h"
 #include "city/view.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/image_group_editor.h"
 #include "empire/empire.h"
 #include "empire/object.h"
@@ -100,7 +100,7 @@ static void create_blank_map(int size) {
 }
 
 static void prepare_map_for_editing(void) {
-    image_load_main(scenario_property_climate(), 1, 0);
+    game_images::get().load_main(scenario_property_climate(), 1, 0);
 
     empire_load_external_c3(1, scenario_empire_id());
     empire_object_init_cities();

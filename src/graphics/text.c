@@ -4,6 +4,7 @@
 #include "core/string.h"
 #include "core/time.h"
 #include "core/game_environment.h"
+#include "core/game_images.h"
 #include "graphics/graphics.h"
 #include "graphics/image.h"
 
@@ -93,7 +94,7 @@ int text_get_width(const uint8_t *str, font_t font) {
         else {
             int letter_id = font_letter_id(def, str, &num_bytes);
             if (letter_id >= 0)
-                width += def->letter_spacing + image_letter(letter_id)->width;
+                width += def->letter_spacing + image_letter(letter_id)->get_width();
 
         }
         str += num_bytes;
@@ -109,7 +110,7 @@ static int get_letter_width(const uint8_t *str, const font_definition *def, int 
 
     int letter_id = font_letter_id(def, str, num_bytes);
     if (letter_id >= 0)
-        return def->letter_spacing + image_letter(letter_id)->width;
+        return def->letter_spacing + image_letter(letter_id)->get_width();
     else {
         return 0;
     }
@@ -170,7 +171,7 @@ void text_ellipsize(uint8_t *str, font_t font, int requested_width) {
         else {
             int letter_id = font_letter_id(def, str, &num_bytes);
             if (letter_id >= 0)
-                width += def->letter_spacing + image_letter(letter_id)->width;
+                width += def->letter_spacing + image_letter(letter_id)->get_width();
 
         }
         if (ellipsis_width + width <= requested_width)
@@ -208,7 +209,7 @@ static int get_word_width(const uint8_t *str, font_t font, int *out_num_chars) {
             // normal char
             int letter_id = font_letter_id(def, str, &num_bytes);
             if (letter_id >= 0)
-                width += image_letter(letter_id)->width + def->letter_spacing;
+                width += image_letter(letter_id)->get_width() + def->letter_spacing;
 
             word_char_seen = 1;
             if (num_bytes > 1) {
@@ -265,9 +266,9 @@ int text_draw(const uint8_t *str, int x, int y, font_t font, color_t color) {
                 width = def->space_width;
             else {
                 const image *img = image_letter(letter_id);
-                int height = def->image_y_offset(*str, img->height, def->line_height);
-                image_draw_letter(font, letter_id, current_x, y - height, color);
-                width = def->letter_spacing + img->width;
+                int height = def->image_y_offset(*str, img->get_height(), def->line_height);
+                image_draw_letter(def->font, letter_id, current_x, y - height, color);
+                width = def->letter_spacing + img->get_width();
             }
             if (input_cursor.capture && input_cursor.position == input_cursor.cursor_position) {
                 if (!input_cursor.seen) {

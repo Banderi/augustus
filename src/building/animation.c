@@ -3,7 +3,7 @@
 #include "building/industry.h"
 #include "building/model.h"
 #include "core/calc.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "game/animation.h"
 #include "map/sprite.h"
 #include "core/game_environment.h"
@@ -75,9 +75,7 @@ int building_animation_offset(building *b, int image_id, int grid_offset, int ma
     }
 
     const image *img = image_get(image_id);
-    if (!max_frames)
-        max_frames = img->num_animation_sprites;
-    if (!game_animation_should_advance(img->animation_speed_id))
+    if (!game_animation_should_advance(img->get_animation_speed_id()))
         return map_sprite_animation_at(grid_offset) & 0x7f;
 
     // advance animation
@@ -112,7 +110,7 @@ int building_animation_offset(building *b, int image_id, int grid_offset, int ma
                     new_sprite = 12;
             }
         }
-    } else if (img->animation_can_reverse) {
+    } else if (img->get_animation_can_reverse()) {
         if (map_sprite_animation_at(grid_offset) & 0x80)
             is_reverse = 1;
 
@@ -125,15 +123,15 @@ int building_animation_offset(building *b, int image_id, int grid_offset, int ma
             }
         } else {
             new_sprite = current_sprite + 1;
-            if (new_sprite > max_frames) {
-                new_sprite = max_frames;
+            if (new_sprite > img->get_num_animation_sprites()) {
+                new_sprite = img->get_num_animation_sprites();
                 is_reverse = 1;
             }
         }
     } else {
         // Absolutely normal case
         new_sprite = map_sprite_animation_at(grid_offset) + 1;
-        if (new_sprite > max_frames)
+        if (new_sprite > img->get_num_animation_sprites())
             new_sprite = 1;
     }
 

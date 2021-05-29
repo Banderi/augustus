@@ -3,7 +3,7 @@
 #include "city/figures.h"
 #include "city/map.h"
 #include "core/calc.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "figure/combat.h"
 #include "figure/formation.h"
 #include "figure/formation_layout.h"

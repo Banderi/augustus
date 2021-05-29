@@ -242,7 +242,7 @@ static void draw_title(const lang_message *msg) {
     } else {
         // Center title in the dialog but ensure it does not overlap with the
         // image: if the title is too long, it will start 8px from the image.
-        int title_x_offset = img ? img->width + msg->image.x + 8 : 0;
+        int title_x_offset = img ? img->get_width() + msg->image.x + 8 : 0;
         text_draw_centered(msg->title.text, data.x + title_x_offset, data.y + 14,
                            16 * msg->width_blocks - 2 * title_x_offset, FONT_LARGE_BLACK, 0);
     }
@@ -253,8 +253,8 @@ static void draw_title(const lang_message *msg) {
         int image_x = msg->image.x;
         int image_y = msg->image.y;
         image_draw(image_id, data.x + image_x, data.y + image_y);
-        if (data.y + image_y + img->height + 8 > data.y_text)
-            data.y_text = data.y + image_y + img->height + 8;
+        if (data.y + image_y + img->get_height() + 8 > data.y_text)
+            data.y_text = data.y + image_y + img->get_height() + 8;
 
     }
 }

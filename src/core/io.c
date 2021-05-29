@@ -52,3 +52,10 @@ int io_write_buffer_to_file(const char *filepath, buffer *buf, int size) {
     file_close(fp);
     return bytes_written;
 }
+size_t io_get_file_size(const char *filepath) {
+    FILE *p_file = fopen(filepath,"rb");
+    fseek(p_file, 0, SEEK_END);
+    size_t size = ftell(p_file);
+    fclose(p_file);
+    return size;
+}

@@ -15,7 +15,7 @@
 #include "city/view.h"
 #include "core/encoding.h"
 #include "core/file.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "core/io.h"
 #include "core/lang.h"
 #include "core/string.h"
@@ -178,8 +178,8 @@ static void initialize_scenario_data(const uint8_t *scenario_name) {
     scenario_demand_change_init();
     scenario_price_change_init();
     building_menu_update(BUILDSET_NORMAL);
-    image_load_main(scenario_property_climate(), 0, 0);
-    image_load_enemy(scenario_property_enemy());
+    game_images::get().load_main(scenario_property_climate(), 0, 0);
+    game_images::get().load_enemy(scenario_property_enemy());
 
     city_data_init_scenario();
     game_state_unpause();
@@ -253,9 +253,9 @@ static void initialize_saved_game(void) {
     city_mission_tutorial_set_fire_message_shown(1);
     city_mission_tutorial_set_disease_message_shown(1);
 
-    image_load_main(scenario_property_climate(), 0, 0);
+    game_images::get().load_main(scenario_property_climate(), 0, 0);
 
-    image_load_enemy(scenario_property_enemy());
+    game_images::get().load_enemy(scenario_property_enemy());
     city_military_determine_distant_battle_city();
     map_tiles_determine_gardens();
 

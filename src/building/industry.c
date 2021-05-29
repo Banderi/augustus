@@ -3,7 +3,7 @@
 
 #include "city/resource.h"
 #include "core/calc.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "game/resource.h"
 #include "map/building_tiles.h"
 #include "map/road_access.h"

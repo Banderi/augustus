@@ -5,7 +5,7 @@
 #include "building/maintenance.h"
 #include "city/figures.h"
 #include "core/calc.h"
-#include "core/image.h"
+#include "core/game_images.h"
 #include "figure/combat.h"
 #include "figure/enemy_army.h"
 #include "figure/image.h"

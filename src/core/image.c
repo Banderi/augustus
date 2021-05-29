@@ -2,7 +2,6 @@
 
 #include "SDL.h"
 
-#include "core/buffer.h"
 #include "core/file.h"
 #include "core/io.h"
 #include "core/log.h"
@@ -10,6 +9,7 @@
 #include "core/config.h"
 #include "core/game_environment.h"
 #include "core/table_translation.h"
+#include "core/image_collection.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -205,19 +205,19 @@ static struct {
     int fonts_enabled;
     int font_base_offset;
 
-    imagepak *ph_expansion;
-    imagepak *ph_sprmain;
-    imagepak *ph_unloaded;
-    imagepak *main;
-    imagepak *ph_terrain;
+    image_collection *ph_expansion;
+    image_collection *ph_sprmain;
+    image_collection *ph_unloaded;
+    image_collection *main;
+    image_collection *ph_terrain;
 
-    imagepak *ph_sprmain2;
-    imagepak *ph_sprambient;
-    imagepak *ph_mastaba;
+    image_collection *ph_sprmain2;
+    image_collection *ph_sprambient;
+    image_collection *ph_mastaba;
 
-    imagepak *enemy;
-    imagepak *empire;
-    imagepak *font;
+    image_collection *enemy;
+    image_collection *empire;
+    image_collection *font;
 
     color_t *tmp_image_data;
 } data = {
@@ -226,39 +226,31 @@ static struct {
         0,
         0,
 
-        new imagepak,
-        new imagepak,
-        new imagepak,
-        new imagepak,
-        new imagepak,
-        new imagepak,
-        new imagepak,
-        new imagepak,
-        new imagepak,
-        new imagepak,
-        new imagepak,
+        new image_collection,
+        new image_collection,
+        new image_collection,
+        new image_collection,
+        new image_collection,
+        new image_collection,
+        new image_collection,
+        new image_collection,
+        new image_collection,
+        new image_collection,
+        new image_collection,
 
         new color_t[SCRATCH_DATA_SIZE - 4000000]
 };
 
 int terrain_ph_offset = 0;
 
-//void mem_test_leak(int j = 100) {
-//    uint8_t *td;
-//    for (j = 0; j < 1; j++) {
-//        td = new uint8_t[100000];
-//        delete td;
-//    }
-//}
-
-static color_t to_32_bit(uint16_t c) {
+color_t to_32_bit(uint16_t c) {
     return ALPHA_OPAQUE |
            ((c & 0x7c00) << 9) | ((c & 0x7000) << 4) |
            ((c & 0x3e0) << 6) | ((c & 0x380) << 1) |
            ((c & 0x1f) << 3) | ((c & 0x1c) >> 2);
 }
 
-static int convert_uncompressed(buffer *buf, int amount, color_t *dst) {
+int convert_uncompressed(buffer *buf, int amount, color_t *dst) {
     for (int i = 0; i < amount; i += 2) {
         color_t c = to_32_bit(buf->read_u16());
         *dst = c;
@@ -266,7 +258,7 @@ static int convert_uncompressed(buffer *buf, int amount, color_t *dst) {
     }
     return amount / 2;
 }
-static int convert_compressed(buffer *buf, int amount, color_t *dst) {
+int convert_compressed(buffer *buf, int amount, color_t *dst) {
     int dst_length = 0;
     while (amount > 0) {
         int control = buf->read_u8();
@@ -334,176 +326,6 @@ static const color_t *load_external_data(const image *img) {
     return data.tmp_image_data;
 }
 
-#include <cassert>
-
-imagepak::imagepak() {
-    initialized = false;
-    images = nullptr;
-    data = nullptr;
-    entries_num = 0;
-    group_image_ids = new uint16_t[300];
-}
-bool imagepak::check_initialized() {
-    return initialized == 0;
-}
-int imagepak::load_555(const char *filename_555, const char *filename_sgx, int shift) {
-    // prepare sgx data
-    buffer *buf = new buffer(SCRATCH_DATA_SIZE);
-    if (!io_read_file_into_buffer(filename_sgx, MAY_BE_LOCALIZED, buf,
-                                  SCRATCH_DATA_SIZE)) //int MAIN_INDEX_SIZE = 660680;
-        return 0;
-    int HEADER_SIZE = 0;
-    if (file_has_extension(filename_sgx, "sg2"))
-        HEADER_SIZE = 20680; // sg2 has 100 bitmap entries
-    else
-        HEADER_SIZE = 40680; //
-
-    // read header
-    buf->read_raw(header_data, sizeof(uint32_t) * 10);
-
-    // allocate arrays
-    entries_num = (size_t) header_data[4] + 1;
-    id_shift_overall = shift;
-    name = filename_sgx;
-    if (check_initialized()) {
-        initialized = false;
-        delete images;
-        delete data;
-    }
-    images = new image[entries_num];
-    data = new color_t[entries_num * 10000];
-    initialized = true;
-
-    buf->skip(40); // skip remaining 40 bytes
-
-    // parse groups (always a fixed 300 pool)
-    groups_num = 0;
-    for (int i = 0; i < 300; i++) {
-        group_image_ids[i] = buf->read_u16();
-        if (group_image_ids[i] != 0 || i == 0) {
-            groups_num++;
-            SDL_Log("%s group %i -> id %i", filename_sgx, i, group_image_ids[i]);
-        }
-    }
-
-    // parse bitmap names
-    int num_bmp_names = (int) header_data[5];
-    char bmp_names[num_bmp_names][200];
-    buf->read_raw(bmp_names, 200 * num_bmp_names); // every line is 200 chars - 97 entries in the original c3.sg2 header (100 for good measure) and 18 in Pharaoh_General.sg3
-
-    // move on to the rest of the content
-    buf->set_offset(HEADER_SIZE);
-
-    // fill in image data
-    int bmp_lastbmp = 0;
-    int bmp_lastindex = 1;
-    for (int i = 0; i < entries_num; i++) {
-        image img;
-        img.draw.offset = buf->read_i32();
-        img.draw.data_length = buf->read_i32();
-        img.draw.uncompressed_length = buf->read_i32();
-        buf->skip(4);
-        img.offset_mirror = buf->read_i32(); // .sg3 only
-        img.width = buf->read_u16();
-        img.height = buf->read_u16();
-        buf->skip(6);
-        img.num_animation_sprites = buf->read_u16();
-        buf->skip(2);
-        img.sprite_offset_x = buf->read_i16();
-        img.sprite_offset_y = buf->read_i16();
-        buf->skip(10);
-        img.animation_can_reverse = buf->read_i8();
-        buf->skip(1);
-        img.draw.type = buf->read_u8();
-        img.draw.is_fully_compressed = buf->read_i8();
-        img.draw.is_external = buf->read_i8();
-        img.draw.has_compressed_part = buf->read_i8();
-        buf->skip(2);
-        int bitmap_id = buf->read_u8();
-        const char *bmn = bmp_names[bitmap_id];
-        strncpy(img.draw.bitmap_name, bmn, 200);
-        if (bitmap_id != bmp_lastbmp) {// new bitmap name, reset bitmap grouping index
-            bmp_lastindex = 1;
-            bmp_lastbmp = bitmap_id;
-        }
-        img.draw.bmp_index = bmp_lastindex;
-        bmp_lastindex++;
-        buf->skip(1);
-        img.animation_speed_id = buf->read_u8();
-        if (header_data[1] < 214)
-            buf->skip(5);
-        else
-            buf->skip(5 + 8);
-        images[i] = img;
-        int f = 1;
-    }
-
-    // fill in bmp offset data
-    int offset = 4;
-    for (int i = 1; i < entries_num; i++) {
-        image *img = &images[i];
-        if (img->draw.is_external) {
-            if (!img->draw.offset)
-                img->draw.offset = 1;
-        } else {
-            img->draw.offset = offset;
-            offset += img->draw.data_length;
-        }
-    }
-
-    // prepare bitmap data
-    buf->clear();
-    int data_size = io_read_file_into_buffer(filename_555, MAY_BE_LOCALIZED, buf, SCRATCH_DATA_SIZE);
-    if (!data_size)
-        return 0;
-
-    // convert bitmap data for image pool
-    color_t *start_dst = data;
-    color_t *dst = data;
-    dst++; // make sure img->offset > 0
-    for (int i = 0; i < entries_num; i++) {
-        image *img = &images[i];
-        if (img->draw.is_external)
-            continue;
-        buf->set_offset(img->draw.offset);
-        int img_offset = (int) (dst - start_dst);
-
-        if (img->draw.is_fully_compressed)
-            dst += convert_compressed(buf, img->draw.data_length, dst);
-        else if (img->draw.has_compressed_part) { // isometric tile
-            dst += convert_uncompressed(buf, img->draw.uncompressed_length, dst);
-            dst += convert_compressed(buf, img->draw.data_length - img->draw.uncompressed_length, dst);
-        } else
-            dst += convert_uncompressed(buf, img->draw.data_length, dst);
-
-        img->draw.offset = img_offset;
-        img->draw.uncompressed_length /= 2;
-        img->draw.data = &data[img_offset];
-//        SDL_Log("Loading... %s : %i", filename_555, i);
-    }
-
-    return 1;
-}
-
-int imagepak::get_entry_count() {
-    return entries_num;
-}
-int imagepak::get_id(int group) {
-    if (group >= groups_num)
-        group = 0;
-    int image_id = group_image_ids[group];
-    return image_id + id_shift_overall;
-}
-const image *imagepak::get_image(int id, bool relative) {
-    if (!relative)
-        id -= id_shift_overall;
-    if (id < 0 || id >= entries_num)
-        return &DUMMY_IMAGE;
-    return &images[id];
-}
-
-#include "window/city.h"
-
 int image_groupid_translation(int table[], int group) {
     if (group == 246)
         int a = 2;
@@ -547,7 +369,7 @@ int image_id_from_group(int group) {
 const image *image_get(int id, int mode) {
     switch (GAME_ENV) {
         case ENGINE_ENV_C3:
-            if (id >= data.main->get_entry_count() && id < data.main->get_entry_count() + MAX_MODDED_IMAGES)
+            if (id >= data.main->size() && id < data.main->size() + MAX_MODDED_IMAGES)
 //                return mods_get_image(id);
                 return &DUMMY_IMAGE;
             else if (id >= 0)
@@ -557,21 +379,19 @@ const image *image_get(int id, int mode) {
         case ENGINE_ENV_PHARAOH: // todo: mods
             const image *img;
             img = data.ph_expansion->get_image(id);
-            if (img != &DUMMY_IMAGE) return img;
+            if (img != nullptr) return img;
             img = data.ph_sprmain->get_image(id);
-            if (img != &DUMMY_IMAGE) return img;
+            if (img != nullptr) return img;
             img = data.ph_unloaded->get_image(id);
-            if (img != &DUMMY_IMAGE) return img;
+            if (img != nullptr) return img;
             img = data.main->get_image(id);
-            if (img != &DUMMY_IMAGE) return img;
+            if (img != nullptr) return img;
             img = data.ph_terrain->get_image(id);
-            if (img != &DUMMY_IMAGE) return img;
+            if (img != nullptr) return img;
             img = data.font->get_image(id);
-            if (img != &DUMMY_IMAGE) return img;
+            if (img != nullptr) return img;
             img = data.ph_sprambient->get_image(id);
-            if (img != &DUMMY_IMAGE) return img;
-            img = data.empire->get_image(id);
-            if (img != &DUMMY_IMAGE) return img;
+            if (img != nullptr) return img;
 
             // default
             return data.ph_terrain->get_image(615, true);
@@ -786,3 +606,17 @@ int image_load_fonts(encoding_type encoding) {
 //                "#endif // GRAPHICS_TABLE_TRANSLATION_H");
 //    fclose(fp);
 //}
+
+image::image() {
+
+}
+
+void image::set_data(color_t *image_data, size_t size) {
+    size_t bytes_size = size * sizeof(color_t);
+    draw.data = new color_t[bytes_size];
+    memcpy(draw.data, image_data, bytes_size);
+}
+
+image::~image() {
+    delete[] draw.data;
+}
